@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
+import { requireSession } from "@/lib/requireSession";
 
 type SqlClient = ReturnType<typeof sql>;
 type QuickActionHandler = (client: SqlClient) => Promise<string>;
@@ -47,7 +48,10 @@ const ACTIONS: Record<string, QuickActionHandler> = {
   sync_agents: syncAgents,
 };
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const session = await requireSession(req);
+  if (session instanceof NextResponse) return session;
+
   let body: { action?: string };
   try {
     body = await req.json();

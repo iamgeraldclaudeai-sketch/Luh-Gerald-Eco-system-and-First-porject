@@ -93,3 +93,13 @@ All notable changes to the Luh Gerald Eco System are logged here.
 - Added unit tests for the new job-queue stub, action runner, and design tokens (11 tests total
   across the suite, all passing; see PR for screenshots of the dashboard, agent action modal, and
   a module page).
+- Added `SYSTEM_MAP.md`: a read-only audit covering API-route auth/error handling, a seed-data-
+  vs-schema diff, a hardcoded-secrets scan, CI workflow verification (via actual GitHub Actions
+  run history), mobile responsiveness of the 6 module pages, Vercel deployment status, and an
+  effort-scored (S/M/L) roadmap of incomplete items.
+- Fixed the unguarded-API-routes finding from that audit: added `lib/requireSession.ts` (a
+  server-side session-cookie check for route handlers) and applied it to `GET /api/agents`,
+  `GET /api/agents/[id]`, `POST /api/agents/[id]/act`, and `POST /api/quick-actions` — previously
+  these had no auth check at all beyond the client-side `RequireAuth` guard, so anyone with the
+  URL could call them directly, including the two that mutate data. 4 new tests confirm requests
+  without a valid session are rejected with 401.
