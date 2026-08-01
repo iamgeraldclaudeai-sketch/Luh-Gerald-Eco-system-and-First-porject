@@ -93,3 +93,11 @@ All notable changes to the Luh Gerald Eco System are logged here.
 - Added unit tests for the new job-queue stub, action runner, and design tokens (11 tests total
   across the suite, all passing; see PR for screenshots of the dashboard, agent action modal, and
   a module page).
+- Removed the hardcoded demo password (`demo1234`) from `scripts/seed.mjs`. Each run now
+  generates a fresh random password (via `crypto.randomBytes`) for every demo account it
+  actually creates, printed once at the end — nothing guessable ships in source anymore.
+  Accounts that already exist are left untouched and are no longer reprinted with a
+  (now-incorrect) password. **Production still has the 3 demo accounts seeded with the old
+  `demo1234` password** — reseeding won't fix this on its own since existing accounts are
+  skipped; those 3 accounts' passwords need to be rotated separately (see PR for the exact
+  options).

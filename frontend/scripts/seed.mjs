@@ -2,6 +2,7 @@
 // Run with: npm run seed  (reads POSTGRES_URL/DATABASE_URL and needs no other setup)
 import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 
 const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 if (!connectionString) {
@@ -11,10 +12,17 @@ if (!connectionString) {
 
 const sql = neon(connectionString);
 
+// Each run generates a fresh random password per newly-created account —
+// nothing guessable is ever hardcoded in source. Printed once at the end,
+// only for accounts actually created this run (see the bottom of main()).
+function generatePassword() {
+  return randomBytes(9).toString("base64url");
+}
+
 const sampleUsers = [
-  { email: "demo@luhgerald.com", password: "demo1234" },
-  { email: "marketing@luhgerald.com", password: "demo1234" },
-  { email: "ops@luhgerald.com", password: "demo1234" },
+  { email: "demo@luhgerald.com" },
+  { email: "marketing@luhgerald.com" },
+  { email: "ops@luhgerald.com" },
 ];
 
 const samplePosts = [
@@ -164,18 +172,21 @@ async function main() {
   await sql`ALTER TABLE module_items ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::jsonb`;
 
   console.log("Seeding sample users (pre-verified, safe to sign in with immediately)...");
+  const createdCredentials = [];
   for (const u of sampleUsers) {
     const existing = await sql`SELECT id FROM users WHERE email = ${u.email}`;
     if (existing.length > 0) {
-      console.log(`  - ${u.email} already exists, skipping`);
+      console.log(`  - ${u.email} already exists, skipping (password unchanged)`);
       continue;
     }
-    const passwordHash = await bcrypt.hash(u.password, 10);
+    const password = generatePassword();
+    const passwordHash = await bcrypt.hash(password, 10);
     await sql`
       INSERT INTO users (email, password_hash, email_verified)
       VALUES (${u.email}, ${passwordHash}, true)
     `;
-    console.log(`  - created ${u.email} (password: ${u.password})`);
+    console.log(`  - created ${u.email}`);
+    createdCredentials.push({ email: u.email, password });
   }
 
   console.log("Seeding sample Marketing Suite posts...");
@@ -227,9 +238,15 @@ async function main() {
     console.log(`  - seeded ${items.length} row(s) for ${moduleSlug}`);
   }
 
-  console.log("\nDone. Sample logins:");
-  for (const u of sampleUsers) {
-    console.log(`  ${u.email} / ${u.password}`);
+  if (createdCredentials.length > 0) {
+    console.log("\nDone. New sample login credentials (save these — they won't be shown again):");
+    for (const c of createdCredentials) {
+      console.log(`  ${c.email} / ${c.password}`);
+    }
+  } else {
+    console.log(
+      "\nDone. No new sample accounts were created (all already existed) — their passwords are unchanged from when they were created."
+    );
   }
 }
 
