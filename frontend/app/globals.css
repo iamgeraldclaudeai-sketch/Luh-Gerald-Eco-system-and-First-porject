@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background-color: #05030f;
+  color: #e9e4ff;
+}
+
+.glow-border {
+  box-shadow: 0 0 0 1px currentColor, 0 0 24px -8px currentColor;
+}
