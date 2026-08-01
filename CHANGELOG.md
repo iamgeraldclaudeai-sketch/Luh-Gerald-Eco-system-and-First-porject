@@ -48,3 +48,11 @@ All notable changes to the Luh Gerald Eco System are logged here.
 - Added a manual GitHub Actions workflow (`.github/workflows/seed.yml`) to run `npm run seed`
   against production using a `DATABASE_URL` GitHub secret, so the credential never has to be
   pasted into a chat or written to a file on a shared machine
+- Polished the dashboard with lightweight, CSS-only animation
+  - `PageTransition` gives every route a subtle fade/slide on navigation
+  - Department cards, agent cards, and activity log entries fade/slide in on mount, with a
+    staggered delay across cards
+  - Stronger glow-on-hover for every card that already used `glow-border` (department cards,
+    agent cards, module widgets/lists) — reuses each element's own color, no new colors added
+  - All animation respects `prefers-reduced-motion: reduce`
+  - No new dependencies; pure CSS keyframes + existing React state

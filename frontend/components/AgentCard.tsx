@@ -5,12 +5,17 @@ import { Agent } from "@/lib/agents";
 export default function AgentCard({
   agent,
   onRunAction,
+  animationDelayMs = 0,
 }: {
   agent: Agent;
   onRunAction: (agent: Agent) => void;
+  animationDelayMs?: number;
 }) {
   return (
-    <div className="glow-border rounded-xl border border-purple-500/30 bg-space-900 p-4">
+    <div
+      className="glow-border animate-fade-in-up rounded-xl border border-purple-500/30 bg-space-900 p-4 transition-transform hover:-translate-y-0.5"
+      style={{ animationDelay: `${animationDelayMs}ms` }}
+    >
       <div className="flex items-center justify-between">
         <div className="text-2xl">{agent.icon}</div>
         <span className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-emerald-400">

@@ -16,15 +16,22 @@ const status = [
 ];
 
 interface LogEntry {
+  id: string;
   time: string;
   message: string;
 }
 
+let logIdCounter = 0;
+function nextLogId() {
+  logIdCounter += 1;
+  return `log-${logIdCounter}`;
+}
+
 const fallbackLogs: LogEntry[] = [
-  { time: "09:41", message: "All 6 departments reporting nominal." },
-  { time: "09:12", message: "Dev Bay deployed a new automation." },
-  { time: "08:57", message: "Finance Office closed out weekly report." },
-  { time: "08:30", message: "System boot complete. AI Command Center online." },
+  { id: nextLogId(), time: "09:41", message: "All 6 departments reporting nominal." },
+  { id: nextLogId(), time: "09:12", message: "Dev Bay deployed a new automation." },
+  { id: nextLogId(), time: "08:57", message: "Finance Office closed out weekly report." },
+  { id: nextLogId(), time: "08:30", message: "System boot complete. AI Command Center online." },
 ];
 
 const quickActions = [
@@ -52,6 +59,7 @@ export default function DashboardHome({
   const [logs, setLogs] = useState<LogEntry[]>(
     initialActivity.length > 0
       ? initialActivity.map((entry) => ({
+          id: `db-${entry.id}`,
           time: formatLogTime(entry.created_at),
           message: entry.message,
         }))
@@ -60,11 +68,13 @@ export default function DashboardHome({
   const [activeAgent, setActiveAgent] = useState<Agent | null>(null);
 
   function runAction(message: string) {
-    setLogs((prev) => [{ time: timestamp(), message }, ...prev].slice(0, 8));
+    setLogs((prev) => [{ id: nextLogId(), time: timestamp(), message }, ...prev].slice(0, 8));
   }
 
   function handleAgentResult(log: ActivityLogEntry) {
-    setLogs((prev) => [{ time: formatLogTime(log.created_at), message: log.message }, ...prev].slice(0, 8));
+    setLogs((prev) =>
+      [{ id: `db-${log.id}`, time: formatLogTime(log.created_at), message: log.message }, ...prev].slice(0, 8)
+    );
     setActiveAgent(null);
   }
 
@@ -112,8 +122,8 @@ export default function DashboardHome({
       <section className="rounded-2xl border border-purple-500/20 bg-space-900/60 p-5">
         <p className="mb-3 text-xs uppercase tracking-widest text-gray-500">Recent logs</p>
         <ul className="space-y-2 text-xs">
-          {logs.map((log, i) => (
-            <li key={`${log.time}-${i}`} className="flex gap-3 text-gray-400">
+          {logs.map((log) => (
+            <li key={log.id} className="animate-fade-in-up flex gap-3 text-gray-400">
               <span className="w-12 shrink-0 text-purple-400">{log.time}</span>
               <span>{log.message}</span>
             </li>
@@ -129,8 +139,13 @@ export default function DashboardHome({
           </p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {agents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} onRunAction={setActiveAgent} />
+            {agents.map((agent, i) => (
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                onRunAction={setActiveAgent}
+                animationDelayMs={i * 60}
+              />
             ))}
           </div>
         )}
@@ -139,13 +154,14 @@ export default function DashboardHome({
       <section>
         <h2 className="mb-4 text-sm uppercase tracking-widest text-gray-500">Departments</h2>
         <div className="grid gap-4 sm:grid-cols-2">
-          {modules.map((m) => {
+          {modules.map((m, i) => {
             const c = colorClasses[m.color];
             return (
               <Link
                 key={m.slug}
                 href={`/${m.slug}`}
-                className={`glow-border group rounded-xl border ${c.border} ${c.hoverBorder} ${c.text} bg-space-900 p-5 transition-transform hover:-translate-y-0.5`}
+                style={{ animationDelay: `${i * 50}ms` }}
+                className={`glow-border animate-fade-in-up group rounded-xl border ${c.border} ${c.hoverBorder} ${c.text} bg-space-900 p-5 transition-transform hover:-translate-y-1 hover:scale-[1.02]`}
               >
                 <div className="text-2xl">{m.icon}</div>
                 <h3 className={`mt-3 font-semibold ${c.text}`}>{m.name}</h3>
