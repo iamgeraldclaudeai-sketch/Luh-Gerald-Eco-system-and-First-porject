@@ -5,49 +5,65 @@ Next.js (App Router), TypeScript, and Tailwind CSS.
 
 ## Structure
 
-- `app/(dashboard)/page.tsx` — homepage / AI Command Center (system status, live
-  activity log, quick actions, department grid), gated behind login
+- `app/(dashboard)/page.tsx`, `app/(dashboard)/dashboard/page.tsx` — the AI Command
+  Center (system status, live activity log, quick actions, AI agent cards, department
+  grid), gated behind login; both routes render the same dashboard
+- `app/(dashboard)/agents/[handle]/page.tsx` — per-agent detail page (covers
+  `/agents/atlas`, `/agents/nova`, and any future agent) with persona, capability
+  badges, and a chat-like action runner
 - `app/(dashboard)/<module>/page.tsx` — one screen per department, each behind
-  the same auth guard:
-  - `marketing-suite`
-  - `content-studio`
-  - `dev-bay`
-  - `operations-hub`
-  - `finance-office`
-  - `research-lab`
+  the same auth guard: `marketing-suite`, `content-studio`, `dev-bay`,
+  `operations-hub`, `finance-office`, `research-lab`. Short aliases
+  (`/marketing`, `/content`, `/dev`, `/ops`, `/finance`, `/research`) redirect to
+  these via `next.config.mjs`.
 - `app/(auth)/login`, `app/(auth)/signup` — email + password auth screens
 - `app/(auth)/forgot-password`, `app/(auth)/reset-password` — password reset flow
 - `app/api/auth/*` — signup, login, logout, session, email verification, and
   password reset API routes (server-side)
 - `app/api/agents/*` — `GET /api/agents`, `GET /api/agents/[id]`, `POST /api/agents/[id]/act`
-  (stubbed action runner, logs each run to `activity_log`)
+  (job-queue-stub pattern: inserts a `pending` row, runs the stub action runner, updates
+  it with `status`/`result`, returns `{ jobId, result, log }`)
 - `app/api/quick-actions/route.ts` — `POST /api/quick-actions`, backing the 4 AI Command
   Center buttons (run_diagnostics, broadcast_update, new_task, sync_agents) with real DB
   reads/writes, same `{ result, log }` response shape as the agent action endpoint
-- `components/Nav.tsx` — shared top navigation + logout + unverified-email banner
+- `components/Header.tsx`, `components/Sidebar.tsx` — dashboard chrome: a top bar
+  (brand, system-status pill, user menu/logout) and a left nav of modules with
+  active-state highlighting (a horizontal scroller on mobile)
 - `components/DashboardHome.tsx` — the AI Command Center's interactive body (status,
   activity log, quick actions, agent cards); `app/(dashboard)/page.tsx` is a thin server
   component that fetches agents + recent activity and passes them in
-- `components/AgentCard.tsx`, `components/AgentActionModal.tsx` — agent cards and the
-  "Run action" modal that calls `POST /api/agents/[id]/act` and appends the result to
-  the activity log
+- `components/ActivityLog.tsx` — reusable activity feed with timestamp + derived tag chip
+- `components/AgentCard.tsx`, `components/AgentActionModal.tsx` — agent cards (avatar,
+  role, capability badges) and the "Run action" modal, both driven by the agent's own
+  `capabilities` list
+- `components/AgentChat.tsx` — the chat-like transcript + action runner used on
+  `/agents/[handle]`
 - `components/ModuleScreen.tsx` — shared layout used by every department screen
   (accepts optional `children` for module-specific content)
 - `components/ModuleItemsList.tsx` — shared list used by Content Studio, Dev Bay,
   Operations Hub, Finance Office, and Research Lab to render their real DB-backed data
+- `components/Skeleton.tsx` — skeleton-loader primitive; used by
+  `app/(dashboard)/loading.tsx` (automatic Suspense fallback while a page's data loads)
+  and `RequireAuth`'s pre-hydration state
 - `components/RequireAuth.tsx` — client-side guard that redirects to `/login` when signed out
+- `lib/design-tokens.ts` — the brand palette (primary/accent/bg/panel), imported by
+  `tailwind.config.ts` so class names and raw values can't drift apart
+- `lib/cn.ts` — `clsx` wrapper for conditional classNames
+- `lib/jobQueue.ts` — lightweight pending/completed/failed wrapper used by the agent
+  action endpoint
+- `lib/actionRunner.ts` — the stubbed action runner (canned responses by action name)
 - `lib/modules.ts` — single source of truth for department metadata (name, tagline, color, widgets)
 - `lib/auth.tsx` — client auth context (calls the API routes, tracks session state)
 - `lib/db.ts` — Postgres connection + lazy schema creation (`users`, `posts`, `agents`,
-  `activity_log`, `module_items`)
-- `lib/agents.ts` — server-side data helpers for agents + recent activity
+  `activity_log`, `module_items`), including additive migrations for existing tables
+- `lib/agents.ts` — server-side data helpers for agents (by id or handle) + recent activity
 - `lib/moduleItems.ts` — server-side data helper for the generic `module_items` table
 - `lib/session.ts` — signed session cookie helpers
 - `lib/tokens.ts` — random token generation (verification/reset links)
 - `lib/email.ts` — sends verification/reset emails via Resend (console fallback if unconfigured)
 - `lib/authConfig.ts` — checks required env vars and returns a specific error if any are missing
-- `scripts/seed.mjs` — seeds sample users, 2 sample agents, sample Marketing Suite posts, and
-  sample data for every other module (`npm run seed`)
+- `scripts/seed.mjs` — seeds sample users, 2 sample agents (with handles/personas/capabilities),
+  sample Marketing Suite posts, and sample data for every other module (`npm run seed`)
 
 ## Getting started
 
@@ -86,19 +102,24 @@ deploys.
 npm test
 ```
 
-Runs `vitest` against the pure logic in `lib/` (session token round-trip,
-token generation) — no database required.
+Runs `vitest` against the pure logic in `lib/` (session tokens, token
+generation, the job-queue stub, the action runner, design tokens) — no
+database required. CI runs this plus `npm run build` on every push/PR via
+`.github/workflows/test.yml`.
 
 ## Deployment
 
-See `../DEPLOYMENT.md` for Vercel setup steps.
+See `../DEPLOYMENT.md` for Vercel setup steps, environment variables, and how
+to seed the production database via GitHub Actions.
 
 ## Status
 
 Front-end foundation, full department screens, a real database-backed auth
-system (signup/login/verify/reset), an AI agents system, all 6 module
-screens wired to live seeded data, and the 4 AI Command Center quick actions
-are all in place and functional. Agent actions (via the "Run action" modal
-on agent cards) are still stubbed (canned responses per action name) — real
-execution logic plugs in behind `app/api/agents/[id]/act/route.ts` next. The
-quick-action buttons, by contrast, already do real work (see `app/api/quick-actions/route.ts`).
+system (signup/login/verify/reset), an AI agents system with per-agent detail
+pages, all 6 module screens wired to live seeded data, and the 4 AI Command
+Center quick actions are all in place and functional. Agent actions (via the
+"Run action" modal or the `/agents/[handle]` chat) are still stubbed (canned
+responses per action name, run through a job-queue-stub pattern) — real
+execution logic plugs in behind `lib/actionRunner.ts` without changing any
+caller. The quick-action buttons, by contrast, already do real work (see
+`app/api/quick-actions/route.ts`).

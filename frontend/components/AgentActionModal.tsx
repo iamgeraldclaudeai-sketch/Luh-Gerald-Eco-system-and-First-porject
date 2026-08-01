@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { Agent, ActivityLogEntry } from "@/lib/agents";
 
-const STUB_ACTIONS = ["suggest_campaign", "run_diagnostics", "summarize_trends"];
-
 export default function AgentActionModal({
   agent,
   onClose,
@@ -14,7 +12,7 @@ export default function AgentActionModal({
   onClose: () => void;
   onResult: (log: ActivityLogEntry) => void;
 }) {
-  const [action, setAction] = useState(STUB_ACTIONS[0]);
+  const [action, setAction] = useState(agent.capabilities[0] ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -58,7 +56,8 @@ export default function AgentActionModal({
           onChange={(e) => setAction(e.target.value)}
           className="mt-1 w-full rounded-lg border border-purple-500/30 bg-space-950 px-3 py-2 text-sm text-gray-200 outline-none focus:border-purple-400"
         >
-          {STUB_ACTIONS.map((a) => (
+          {agent.capabilities.length === 0 && <option value="">No capabilities configured</option>}
+          {agent.capabilities.map((a) => (
             <option key={a} value={a}>
               {a}
             </option>
@@ -75,8 +74,8 @@ export default function AgentActionModal({
         <div className="mt-6 flex gap-2">
           <button
             onClick={handleRun}
-            disabled={submitting}
-            className="flex-1 rounded-lg bg-purple-600 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-500 disabled:opacity-50"
+            disabled={submitting || !action}
+            className="glow-cta flex-1 rounded-lg bg-primary py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
             {submitting ? "Running…" : "Run"}
           </button>

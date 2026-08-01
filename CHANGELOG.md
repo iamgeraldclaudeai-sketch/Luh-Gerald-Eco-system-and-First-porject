@@ -64,3 +64,32 @@ All notable changes to the Luh Gerald Eco System are logged here.
   - **Broadcast update** logs a system-wide entry
   - Every run writes to `activity_log` and appears in the dashboard's live activity feed;
     buttons show a per-action loading state and surface errors instead of failing silently
+- Design tokens: added `lib/design-tokens.ts` (primary `#7C5CFF`, accent `#00E6A8`, bg `#0B0F1A`,
+  panel `rgba(255,255,255,0.03)`), wired into `tailwind.config.ts`; applied across primary CTAs,
+  glass-panel surfaces, and the new neon `glow-cta` treatment. Added `clsx`/`lib/cn.ts` for
+  conditional classNames and `lib/jobQueue.ts` as a lightweight job-status stub.
+- Extended the schema (additive, non-breaking): `agents` gains `handle` (unique), `persona`,
+  `capabilities` (jsonb); `activity_log` gains `user_id`, `action`, `input`, `result` (jsonb),
+  `status`; `module_items` gains `body`, `metadata` (jsonb). Existing columns and data are
+  untouched; `npm run seed` backfills `handle`/`persona`/`capabilities` on the existing Atlas/Nova rows.
+- `POST /api/agents/[id]/act` now runs through a job-queue-stub pattern (`lib/jobQueue.ts` +
+  `lib/actionRunner.ts`): inserts a `pending` activity_log row up front, runs the stub action
+  runner, then updates the row with `status`/`result` and returns `{ jobId, result, log }`.
+- Added `/agents/[handle]` detail pages (covers `/agents/atlas`, `/agents/nova`, and any future
+  agent) with a chat-like transcript of past activity and a capability-driven action runner
+  (`components/AgentChat.tsx`). `AgentCard`'s "Run action" modal now also pulls its options from
+  the agent's real `capabilities` instead of a hardcoded list.
+- Restructured dashboard chrome into `Header` (brand, system-status pill, user menu/logout) and
+  `Sidebar` (modules with active-state highlighting), replacing the old single `Nav` bar;
+  extracted `ActivityLog` as its own reusable component with derived tag chips.
+- Added `/dashboard` (renders the same Command Center as `/`) and short-URL redirects
+  (`/marketing`, `/content`, `/dev`, `/ops`, `/finance`, `/research` → the existing canonical
+  routes) via `next.config.mjs`; login/signup/reset now redirect to `/dashboard`.
+- UI polish: glass-panel surfaces, `prefers-reduced-motion`-aware skeleton loaders
+  (`components/Skeleton.tsx`, `app/(dashboard)/loading.tsx`, used by `RequireAuth` too), and a
+  `:focus-visible` ring using the accent color for keyboard accessibility.
+- Added `.github/workflows/test.yml` (runs `npm test` + `npm run build` on push/PR) alongside the
+  existing manual seed workflow.
+- Added unit tests for the new job-queue stub, action runner, and design tokens (11 tests total
+  across the suite, all passing; see PR for screenshots of the dashboard, agent action modal, and
+  a module page).

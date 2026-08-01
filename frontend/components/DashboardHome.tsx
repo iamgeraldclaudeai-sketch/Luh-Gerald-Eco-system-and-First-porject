@@ -7,6 +7,7 @@ import { colorClasses } from "@/lib/colors";
 import { Agent, ActivityLogEntry } from "@/lib/agents";
 import AgentCard from "@/components/AgentCard";
 import AgentActionModal from "@/components/AgentActionModal";
+import ActivityLog from "@/components/ActivityLog";
 
 const status = [
   { label: "Energy", value: "100%" },
@@ -102,7 +103,7 @@ export default function DashboardHome({
   return (
     <div className="starfield space-y-8 rounded-3xl border border-purple-500/10 p-2">
       <section className="grid gap-4 lg:grid-cols-[1fr_260px]">
-        <div className="glow-border rounded-2xl border border-purple-500/40 bg-purple-500/5 px-8 py-10 text-purple-300">
+        <div className="glass-panel glow-border rounded-2xl border border-primary/40 px-8 py-10 text-purple-300">
           <p className="text-xs tracking-[0.3em]">AI COMMAND CENTER</p>
           <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
             Control. Monitor. Decide.
@@ -128,7 +129,7 @@ export default function DashboardHome({
           )}
         </div>
 
-        <div className="glow-border rounded-2xl border border-purple-500/40 bg-space-900 px-5 py-5 text-purple-300">
+        <div className="glass-panel glow-border rounded-2xl border border-primary/40 px-5 py-5 text-purple-300">
           <p className="text-xs tracking-[0.2em]">SYSTEM STATUS</p>
           <div className="mt-4 space-y-3 text-xs">
             {status.map((s) => (
@@ -146,14 +147,7 @@ export default function DashboardHome({
 
       <section className="rounded-2xl border border-purple-500/20 bg-space-900/60 p-5">
         <p className="mb-3 text-xs uppercase tracking-widest text-gray-500">Recent logs</p>
-        <ul className="space-y-2 text-xs">
-          {logs.map((log) => (
-            <li key={log.id} className="animate-fade-in-up flex gap-3 text-gray-400">
-              <span className="w-12 shrink-0 text-purple-400">{log.time}</span>
-              <span>{log.message}</span>
-            </li>
-          ))}
-        </ul>
+        <ActivityLog logs={logs} />
       </section>
 
       <section>

@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { colors as tokens } from "./lib/design-tokens";
 
 const config: Config = {
   content: [
@@ -8,6 +9,10 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        primary: tokens.primary,
+        accent: tokens.accent,
+        bg: tokens.bg,
+        panel: tokens.panel,
         space: {
           950: "#05030f",
           900: "#0b0620",

@@ -15,7 +15,8 @@ export async function GET(
     await ensureSchema();
     const client = sql();
     const rows = await client`
-      SELECT id, name, role, icon, status FROM agents WHERE id = ${agentId}
+      SELECT id, handle, name, role, persona, capabilities, icon, status
+      FROM agents WHERE id = ${agentId}
     `;
     if (rows.length === 0) {
       return NextResponse.json({ error: "Agent not found." }, { status: 404 });
