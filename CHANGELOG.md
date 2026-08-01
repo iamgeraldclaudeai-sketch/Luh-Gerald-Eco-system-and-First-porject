@@ -56,3 +56,11 @@ All notable changes to the Luh Gerald Eco System are logged here.
     agent cards, module widgets/lists) — reuses each element's own color, no new colors added
   - All animation respects `prefers-reduced-motion: reduce`
   - No new dependencies; pure CSS keyframes + existing React state
+- Wired the 4 AI Command Center quick-action buttons to real functionality via `POST /api/quick-actions`,
+  same `{ result, log }` shape as the agent action endpoint
+  - **Run diagnostics** reads live agent/module-item counts from the database
+  - **New task** inserts a real row into `module_items` for Operations Hub (visible on that screen)
+  - **Sync agents** updates a new `agents.last_synced_at` column for every agent
+  - **Broadcast update** logs a system-wide entry
+  - Every run writes to `activity_log` and appears in the dashboard's live activity feed;
+    buttons show a per-action loading state and surface errors instead of failing silently

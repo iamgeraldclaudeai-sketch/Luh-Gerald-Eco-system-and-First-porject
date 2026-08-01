@@ -35,15 +35,11 @@ const fallbackLogs: LogEntry[] = [
 ];
 
 const quickActions = [
-  { label: "Run diagnostics", message: "Diagnostics complete — all systems nominal." },
-  { label: "Broadcast update", message: "Broadcast sent to all departments." },
-  { label: "New task", message: "New task queued in Operations Hub." },
-  { label: "Sync agents", message: "AI agents re-synced across the ecosystem." },
+  { label: "Run diagnostics", action: "run_diagnostics" },
+  { label: "Broadcast update", action: "broadcast_update" },
+  { label: "New task", action: "new_task" },
+  { label: "Sync agents", action: "sync_agents" },
 ];
-
-function timestamp() {
-  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
 
 function formatLogTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -66,16 +62,41 @@ export default function DashboardHome({
       : fallbackLogs
   );
   const [activeAgent, setActiveAgent] = useState<Agent | null>(null);
+  const [runningAction, setRunningAction] = useState<string | null>(null);
+  const [quickActionError, setQuickActionError] = useState<string | null>(null);
 
-  function runAction(message: string) {
-    setLogs((prev) => [{ id: nextLogId(), time: timestamp(), message }, ...prev].slice(0, 8));
-  }
-
-  function handleAgentResult(log: ActivityLogEntry) {
+  function appendLog(log: ActivityLogEntry) {
     setLogs((prev) =>
       [{ id: `db-${log.id}`, time: formatLogTime(log.created_at), message: log.message }, ...prev].slice(0, 8)
     );
+  }
+
+  function handleAgentResult(log: ActivityLogEntry) {
+    appendLog(log);
     setActiveAgent(null);
+  }
+
+  async function runQuickAction(action: string) {
+    if (runningAction) return;
+    setRunningAction(action);
+    setQuickActionError(null);
+    try {
+      const res = await fetch("/api/quick-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setQuickActionError(data.error ?? "Something went wrong.");
+        return;
+      }
+      appendLog(data.log as ActivityLogEntry);
+    } catch {
+      setQuickActionError("Could not reach the server.");
+    } finally {
+      setRunningAction(null);
+    }
   }
 
   return (
@@ -91,16 +112,20 @@ export default function DashboardHome({
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {quickActions.map((action) => (
+            {quickActions.map((qa) => (
               <button
-                key={action.label}
-                onClick={() => runAction(action.message)}
-                className="rounded-lg border border-purple-500/40 px-3 py-1.5 text-xs text-purple-200 transition-colors hover:border-purple-300 hover:bg-purple-500/10"
+                key={qa.action}
+                onClick={() => runQuickAction(qa.action)}
+                disabled={runningAction !== null}
+                className="rounded-lg border border-purple-500/40 px-3 py-1.5 text-xs text-purple-200 transition-colors hover:border-purple-300 hover:bg-purple-500/10 disabled:opacity-50"
               >
-                {action.label}
+                {runningAction === qa.action ? "Running…" : qa.label}
               </button>
             ))}
           </div>
+          {quickActionError && (
+            <p className="mt-3 text-xs text-pink-400">{quickActionError}</p>
+          )}
         </div>
 
         <div className="glow-border rounded-2xl border border-purple-500/40 bg-space-900 px-5 py-5 text-purple-300">

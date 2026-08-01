@@ -48,9 +48,11 @@ export async function ensureSchema() {
           role TEXT NOT NULL,
           icon TEXT NOT NULL DEFAULT '🤖',
           status TEXT NOT NULL DEFAULT 'idle',
+          last_synced_at TIMESTAMPTZ,
           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
       `;
+      await client`ALTER TABLE agents ADD COLUMN IF NOT EXISTS last_synced_at TIMESTAMPTZ`;
       await client`
         CREATE TABLE IF NOT EXISTS activity_log (
           id SERIAL PRIMARY KEY,

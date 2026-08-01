@@ -21,6 +21,9 @@ Next.js (App Router), TypeScript, and Tailwind CSS.
   password reset API routes (server-side)
 - `app/api/agents/*` — `GET /api/agents`, `GET /api/agents/[id]`, `POST /api/agents/[id]/act`
   (stubbed action runner, logs each run to `activity_log`)
+- `app/api/quick-actions/route.ts` — `POST /api/quick-actions`, backing the 4 AI Command
+  Center buttons (run_diagnostics, broadcast_update, new_task, sync_agents) with real DB
+  reads/writes, same `{ result, log }` response shape as the agent action endpoint
 - `components/Nav.tsx` — shared top navigation + logout + unverified-email banner
 - `components/DashboardHome.tsx` — the AI Command Center's interactive body (status,
   activity log, quick actions, agent cards); `app/(dashboard)/page.tsx` is a thin server
@@ -93,7 +96,9 @@ See `../DEPLOYMENT.md` for Vercel setup steps.
 ## Status
 
 Front-end foundation, full department screens, a real database-backed auth
-system (signup/login/verify/reset), an AI agents system with a stubbed action
-runner, and all 6 module screens wired to live seeded data are in place.
-Agent actions are still stubbed (canned responses per action name) — real
-execution logic plugs in behind `app/api/agents/[id]/act/route.ts` next.
+system (signup/login/verify/reset), an AI agents system, all 6 module
+screens wired to live seeded data, and the 4 AI Command Center quick actions
+are all in place and functional. Agent actions (via the "Run action" modal
+on agent cards) are still stubbed (canned responses per action name) — real
+execution logic plugs in behind `app/api/agents/[id]/act/route.ts` next. The
+quick-action buttons, by contrast, already do real work (see `app/api/quick-actions/route.ts`).
