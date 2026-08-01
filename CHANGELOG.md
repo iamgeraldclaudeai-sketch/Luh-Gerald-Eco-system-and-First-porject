@@ -34,3 +34,14 @@ All notable changes to the Luh Gerald Eco System are logged here.
 - Added `scripts/seed.mjs` (`npm run seed`) to populate sample users and sample Marketing Suite posts
 - Wired the Marketing Suite screen to real seeded post data (first module off placeholders)
 - Added vitest with unit tests for session token round-trip and token generation (`npm test`)
+- Added an AI agents system
+  - `agents` and `activity_log` tables; 2 sample agents seeded (Atlas, Nova)
+  - `GET /api/agents`, `GET /api/agents/[id]`, `POST /api/agents/[id]/act` (stubbed action
+    runner, logs each run to `activity_log`)
+  - AI Command Center now shows agent cards with a "Run action" modal; results append live
+    to the activity log feed
+- Wired the remaining 5 modules to real DB-backed data, same server-component pattern as
+  Marketing Suite: Content Studio, Dev Bay, Operations Hub, Finance Office, Research Lab
+  - Generic `module_items` table (with optional `amount_cents` for Finance Office) plus a
+    shared `lib/moduleItems.ts` helper and `components/ModuleItemsList.tsx` display component
+  - Sample rows seeded for every module via `npm run seed`

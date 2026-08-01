@@ -1,6 +1,15 @@
 import ModuleScreen from "@/components/ModuleScreen";
+import ModuleItemsList from "@/components/ModuleItemsList";
 import { getModule } from "@/lib/modules";
+import { getModuleItems } from "@/lib/moduleItems";
 
-export default function Page() {
-  return <ModuleScreen module={getModule("dev-bay")!} />;
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const items = await getModuleItems("dev-bay");
+  return (
+    <ModuleScreen module={getModule("dev-bay")!}>
+      <ModuleItemsList items={items} heading="Dev Tasks" color="blue" />
+    </ModuleScreen>
+  );
 }

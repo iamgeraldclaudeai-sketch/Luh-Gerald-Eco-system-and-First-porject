@@ -41,6 +41,34 @@ export async function ensureSchema() {
           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
       `;
+      await client`
+        CREATE TABLE IF NOT EXISTS agents (
+          id SERIAL PRIMARY KEY,
+          name TEXT NOT NULL,
+          role TEXT NOT NULL,
+          icon TEXT NOT NULL DEFAULT '🤖',
+          status TEXT NOT NULL DEFAULT 'idle',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await client`
+        CREATE TABLE IF NOT EXISTS activity_log (
+          id SERIAL PRIMARY KEY,
+          agent_id INTEGER REFERENCES agents(id),
+          message TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await client`
+        CREATE TABLE IF NOT EXISTS module_items (
+          id SERIAL PRIMARY KEY,
+          module TEXT NOT NULL,
+          title TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'active',
+          amount_cents INTEGER,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
     })();
   }
   await ready;

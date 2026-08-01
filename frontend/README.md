@@ -19,18 +19,32 @@ Next.js (App Router), TypeScript, and Tailwind CSS.
 - `app/(auth)/forgot-password`, `app/(auth)/reset-password` — password reset flow
 - `app/api/auth/*` — signup, login, logout, session, email verification, and
   password reset API routes (server-side)
+- `app/api/agents/*` — `GET /api/agents`, `GET /api/agents/[id]`, `POST /api/agents/[id]/act`
+  (stubbed action runner, logs each run to `activity_log`)
 - `components/Nav.tsx` — shared top navigation + logout + unverified-email banner
+- `components/DashboardHome.tsx` — the AI Command Center's interactive body (status,
+  activity log, quick actions, agent cards); `app/(dashboard)/page.tsx` is a thin server
+  component that fetches agents + recent activity and passes them in
+- `components/AgentCard.tsx`, `components/AgentActionModal.tsx` — agent cards and the
+  "Run action" modal that calls `POST /api/agents/[id]/act` and appends the result to
+  the activity log
 - `components/ModuleScreen.tsx` — shared layout used by every department screen
-  (accepts optional `children` for module-specific content, used by Marketing Suite)
+  (accepts optional `children` for module-specific content)
+- `components/ModuleItemsList.tsx` — shared list used by Content Studio, Dev Bay,
+  Operations Hub, Finance Office, and Research Lab to render their real DB-backed data
 - `components/RequireAuth.tsx` — client-side guard that redirects to `/login` when signed out
 - `lib/modules.ts` — single source of truth for department metadata (name, tagline, color, widgets)
 - `lib/auth.tsx` — client auth context (calls the API routes, tracks session state)
-- `lib/db.ts` — Postgres connection + lazy `users`/`posts` table creation
+- `lib/db.ts` — Postgres connection + lazy schema creation (`users`, `posts`, `agents`,
+  `activity_log`, `module_items`)
+- `lib/agents.ts` — server-side data helpers for agents + recent activity
+- `lib/moduleItems.ts` — server-side data helper for the generic `module_items` table
 - `lib/session.ts` — signed session cookie helpers
 - `lib/tokens.ts` — random token generation (verification/reset links)
 - `lib/email.ts` — sends verification/reset emails via Resend (console fallback if unconfigured)
 - `lib/authConfig.ts` — checks required env vars and returns a specific error if any are missing
-- `scripts/seed.mjs` — seeds sample users + sample Marketing Suite posts (`npm run seed`)
+- `scripts/seed.mjs` — seeds sample users, 2 sample agents, sample Marketing Suite posts, and
+  sample data for every other module (`npm run seed`)
 
 ## Getting started
 
@@ -79,6 +93,7 @@ See `../DEPLOYMENT.md` for Vercel setup steps.
 ## Status
 
 Front-end foundation, full department screens, a real database-backed auth
-system (signup/login/verify/reset), and the Marketing Suite screen wired to
-live seeded data are all in place. The other 5 module screens still show
-placeholder widgets — real data plugs in the same way Marketing Suite did.
+system (signup/login/verify/reset), an AI agents system with a stubbed action
+runner, and all 6 module screens wired to live seeded data are in place.
+Agent actions are still stubbed (canned responses per action name) — real
+execution logic plugs in behind `app/api/agents/[id]/act/route.ts` next.
