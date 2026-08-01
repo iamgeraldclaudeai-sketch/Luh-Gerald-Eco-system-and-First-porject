@@ -1,12 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
 import { runJob } from "@/lib/jobQueue";
 import { runAgentAction } from "@/lib/actionRunner";
+import { requireSession } from "@/lib/requireSession";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireSession(req);
+  if (session instanceof NextResponse) return session;
+
   const { id } = await params;
   const agentId = Number(id);
   if (!Number.isInteger(agentId)) {
