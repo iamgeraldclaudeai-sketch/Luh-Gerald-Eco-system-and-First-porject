@@ -19,3 +19,8 @@ All notable changes to the Luh Gerald Eco System are logged here.
   - `/login` and `/signup` screens, session persisted client-side
   - Dashboard and all module routes now redirect to `/login` when signed out
 - Added Vercel deployment configuration (`frontend/vercel.json`) and `DEPLOYMENT.md` with setup instructions
+- Replaced browser-only auth with real server-side auth
+  - Postgres-backed `users` table (auto-created on first signup, no migration step)
+  - Passwords hashed with bcrypt; sessions are signed httpOnly cookies
+  - New `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/session` routes
+  - Documented database + session secret setup in `DEPLOYMENT.md`

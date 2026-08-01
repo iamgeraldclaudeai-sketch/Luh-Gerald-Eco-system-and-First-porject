@@ -8,48 +8,33 @@ import {
   ReactNode,
 } from "react";
 
-interface StoredUser {
-  email: string;
-  passwordHash: string;
-}
-
 interface AuthUser {
   email: string;
+}
+
+interface AuthResult {
+  ok: boolean;
+  error?: string;
 }
 
 interface AuthContextValue {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  signup: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  signup: (email: string, password: string) => Promise<AuthResult>;
+  logout: () => Promise<void>;
 }
-
-const USERS_KEY = "ecosystem_auth_users";
-const SESSION_KEY = "ecosystem_auth_session";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(`luh-gerald-ecosystem::${password}`);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(digest))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function readUsers(): StoredUser[] {
-  try {
-    const raw = localStorage.getItem(USERS_KEY);
-    return raw ? (JSON.parse(raw) as StoredUser[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeUsers(users: StoredUser[]) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+async function postJson(url: string, body: unknown) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, data };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -57,54 +42,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw) as AuthUser);
-      } catch {
-        localStorage.removeItem(SESSION_KEY);
-      }
-    }
-    setLoading(false);
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((data) => setUser(data.user ?? null))
+      .catch(() => setUser(null))
+      .finally(() => setLoading(false));
   }, []);
 
-  async function signup(email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !password) {
-      return { ok: false, error: "Email and password are required." };
-    }
-    const users = readUsers();
-    if (users.some((u) => u.email === normalizedEmail)) {
-      return { ok: false, error: "An account with that email already exists." };
-    }
-    const passwordHash = await hashPassword(password);
-    users.push({ email: normalizedEmail, passwordHash });
-    writeUsers(users);
-    const sessionUser = { email: normalizedEmail };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    setUser(sessionUser);
+  async function signup(email: string, password: string): Promise<AuthResult> {
+    const { ok, data } = await postJson("/api/auth/signup", { email, password });
+    if (!ok) return { ok: false, error: data.error ?? "Something went wrong." };
+    setUser(data.user);
     return { ok: true };
   }
 
-  async function login(email: string, password: string) {
-    const normalizedEmail = email.trim().toLowerCase();
-    const users = readUsers();
-    const match = users.find((u) => u.email === normalizedEmail);
-    if (!match) {
-      return { ok: false, error: "No account found with that email." };
-    }
-    const passwordHash = await hashPassword(password);
-    if (match.passwordHash !== passwordHash) {
-      return { ok: false, error: "Incorrect password." };
-    }
-    const sessionUser = { email: normalizedEmail };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    setUser(sessionUser);
+  async function login(email: string, password: string): Promise<AuthResult> {
+    const { ok, data } = await postJson("/api/auth/login", { email, password });
+    if (!ok) return { ok: false, error: data.error ?? "Something went wrong." };
+    setUser(data.user);
     return { ok: true };
   }
 
-  function logout() {
-    localStorage.removeItem(SESSION_KEY);
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
   }
 

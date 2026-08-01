@@ -16,31 +16,34 @@ Next.js (App Router), TypeScript, and Tailwind CSS.
   - `finance-office`
   - `research-lab`
 - `app/(auth)/login`, `app/(auth)/signup` — email + password auth screens
+- `app/api/auth/*` — signup, login, logout, and session API routes (server-side)
 - `components/Nav.tsx` — shared top navigation + logout, shown on every dashboard screen
 - `components/ModuleScreen.tsx` — shared layout used by every department screen
 - `components/RequireAuth.tsx` — client-side guard that redirects to `/login` when signed out
 - `lib/modules.ts` — single source of truth for department metadata (name, tagline, color, widgets)
-- `lib/auth.tsx` — auth context (signup/login/logout + session)
+- `lib/auth.tsx` — client auth context (calls the API routes, tracks session state)
+- `lib/db.ts` — Postgres connection + lazy `users` table creation
+- `lib/session.ts` — signed session cookie helpers
 
 ## Getting started
 
 ```bash
 cd frontend
+cp .env.example .env.local   # fill in POSTGRES_URL and SESSION_SECRET
 npm install
 npm run dev
 ```
 
 Then open http://localhost:3000 — you'll land on `/login` until you create an
-account via `/signup`.
+account via `/signup`. See `../DEPLOYMENT.md` for where `POSTGRES_URL` comes
+from.
 
 ## Auth — how it works today
 
-Signup/login run entirely in the browser: passwords are hashed (SHA-256) and
-stored in `localStorage` alongside the session. This is enough to demo the
-full login → signup → dashboard flow and needs no backend to deploy, but it
-is **not** real production security — accounts don't sync across devices and
-aren't recoverable if storage is cleared. Swapping in a real database +
-server-side auth is the natural next step once you're ready.
+Signup and login are real, server-side: passwords are hashed with bcrypt and
+stored in Postgres, and sessions are signed httpOnly cookies verified on the
+server (`lib/session.ts`). Accounts sync across devices/browsers and survive
+deploys. Nothing else to swap in later — this is the real thing.
 
 ## Deployment
 
