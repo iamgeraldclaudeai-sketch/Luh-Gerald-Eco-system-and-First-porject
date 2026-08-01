@@ -45,3 +45,6 @@ All notable changes to the Luh Gerald Eco System are logged here.
   - Generic `module_items` table (with optional `amount_cents` for Finance Office) plus a
     shared `lib/moduleItems.ts` helper and `components/ModuleItemsList.tsx` display component
   - Sample rows seeded for every module via `npm run seed`
+- Added a manual GitHub Actions workflow (`.github/workflows/seed.yml`) to run `npm run seed`
+  against production using a `DATABASE_URL` GitHub secret, so the credential never has to be
+  pasted into a chat or written to a file on a shared machine

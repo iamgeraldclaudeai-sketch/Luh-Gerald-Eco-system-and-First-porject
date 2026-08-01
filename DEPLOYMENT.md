@@ -74,7 +74,8 @@ To send real emails:
 
 ## Seeding sample data
 
-To try the app with sample accounts and sample Marketing Suite posts:
+To try the app with sample accounts, sample agents, and sample data for every
+module:
 
 ```bash
 cd frontend
@@ -82,4 +83,29 @@ npm run seed
 ```
 
 This is safe to re-run — it skips anything already seeded. It prints the
-sample login credentials when it finishes.
+sample login credentials when it finishes. It needs `DATABASE_URL` (or
+`POSTGRES_URL`) pointed at the database you want to seed — see "Local
+development" above for your own machine, or the next section to seed your
+**production** database without ever pasting the credential into a chat.
+
+### Seeding production via GitHub Actions
+
+There's a manual workflow (`.github/workflows/seed.yml`) that runs
+`npm run seed` inside GitHub's own infrastructure, using a secret you store
+in GitHub — this is the safest way to seed your live production database
+since the credential never has to leave GitHub's systems.
+
+One-time setup:
+
+1. In the GitHub repo, go to **Settings → Secrets and variables → Actions →
+   New repository secret**.
+2. Name it `DATABASE_URL`, paste your production connection string as the
+   value, save.
+
+To run it:
+
+1. Go to the **Actions** tab → **Seed Database** (in the left sidebar) →
+   **Run workflow**.
+2. Pick the branch that has this workflow file, click **Run workflow**.
+3. Open the run to see the log — it'll print the same sample login
+   credentials as running it locally.
