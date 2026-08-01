@@ -16,17 +16,32 @@ export function sql() {
   return neon(connectionString());
 }
 
-export async function ensureUsersTable() {
+export async function ensureSchema() {
   if (!ready) {
     const client = sql();
-    ready = client`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-      )
-    `.then(() => undefined);
+    ready = (async () => {
+      await client`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          email_verified BOOLEAN NOT NULL DEFAULT false,
+          verification_token TEXT,
+          verification_token_expires TIMESTAMPTZ,
+          reset_token TEXT,
+          reset_token_expires TIMESTAMPTZ,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await client`
+        CREATE TABLE IF NOT EXISTS posts (
+          id SERIAL PRIMARY KEY,
+          title TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'draft',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+    })();
   }
   await ready;
 }

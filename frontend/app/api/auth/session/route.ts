@@ -12,5 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ user: null });
   }
 
-  return NextResponse.json({ user: { email: payload.email } });
+  return NextResponse.json({
+    user: { email: payload.email, emailVerified: payload.emailVerified },
+  });
 }

@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { sql, ensureUsersTable } from "@/lib/db";
+import { sql, ensureSchema } from "@/lib/db";
 import { createSessionToken, SESSION_COOKIE, sessionCookieOptions } from "@/lib/session";
+import { missingAuthEnvVars, authConfigErrorResponse } from "@/lib/authConfig";
+import { generateToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/email";
+
+const VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
+  const missing = missingAuthEnvVars();
+  if (missing.length > 0) {
+    return NextResponse.json(authConfigErrorResponse(missing), { status: 500 });
+  }
+
   let body: { email?: string; password?: string };
   try {
     body = await req.json();
@@ -25,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await ensureUsersTable();
+    await ensureSchema();
     const client = sql();
 
     const existing = await client`SELECT id FROM users WHERE email = ${email}`;
@@ -37,16 +47,26 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    await client`INSERT INTO users (email, password_hash) VALUES (${email}, ${passwordHash})`;
+    const verificationToken = generateToken();
+    const verificationExpires = new Date(Date.now() + VERIFICATION_TOKEN_TTL_MS).toISOString();
 
-    const token = await createSessionToken(email);
-    const res = NextResponse.json({ user: { email } });
+    await client`
+      INSERT INTO users (email, password_hash, verification_token, verification_token_expires)
+      VALUES (${email}, ${passwordHash}, ${verificationToken}, ${verificationExpires})
+    `;
+
+    sendVerificationEmail(email, verificationToken, req.nextUrl.origin).catch((err) =>
+      console.error("failed to send verification email", err)
+    );
+
+    const token = await createSessionToken({ email, emailVerified: false });
+    const res = NextResponse.json({ user: { email, emailVerified: false } });
     res.cookies.set(SESSION_COOKIE, token, sessionCookieOptions);
     return res;
   } catch (err) {
     console.error("signup error", err);
     return NextResponse.json(
-      { error: "Server isn't configured for sign up yet. See DEPLOYMENT.md." },
+      { error: "Something went wrong creating your account. See DEPLOYMENT.md." },
       { status: 500 }
     );
   }

@@ -50,3 +50,36 @@ every push — no extra steps needed.
 Signup and login are handled by API routes (`frontend/app/api/auth/*`):
 passwords are hashed with bcrypt and stored in Postgres, and sessions are
 signed httpOnly cookies — safe to use for real accounts, not just a demo.
+Signup also sends a verification email, and there's a full forgot/reset
+password flow — see below.
+
+If a required env var is missing, these routes now return a specific error
+telling you which one (instead of a generic failure), e.g.:
+`Server is missing required environment variable(s): SESSION_SECRET.`
+
+## Sending real emails (verification + password reset)
+
+Emails are sent via [Resend](https://resend.com). Without an API key,
+emails are simply logged to the server console instead of sent — so
+everything still works for local testing/demos with zero setup.
+
+To send real emails:
+
+1. Create a free Resend account and get an API key.
+2. Add environment variables:
+   - `RESEND_API_KEY` — your Resend API key.
+   - `RESEND_FROM_EMAIL` (optional) — defaults to Resend's shared test
+     sender; set this to your own verified domain/sender once you have one.
+3. Redeploy.
+
+## Seeding sample data
+
+To try the app with sample accounts and sample Marketing Suite posts:
+
+```bash
+cd frontend
+npm run seed
+```
+
+This is safe to re-run — it skips anything already seeded. It prints the
+sample login credentials when it finishes.
