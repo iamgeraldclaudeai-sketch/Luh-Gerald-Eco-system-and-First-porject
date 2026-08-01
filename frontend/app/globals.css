@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background-color: #05030f;
+  color: #e9e4ff;
+}
+
+.glow-border {
+  box-shadow: 0 0 0 1px currentColor, 0 0 24px -8px currentColor;
+}
+
+.starfield {
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 80% 10%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 60% 70%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 30% 80%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 90% 60%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.5px 1.5px at 45% 35%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 15% 55%, rgba(255, 255, 255, 0.6), transparent);
+  background-repeat: repeat;
+  background-size: 220px 220px;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.pulse-dot {
+  animation: pulse-glow 2.4s ease-in-out infinite;
+}
