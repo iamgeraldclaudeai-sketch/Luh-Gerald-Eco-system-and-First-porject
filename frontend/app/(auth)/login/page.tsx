@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 
-export default function LoginPage() {
+function LoginForm() {
   const { login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +36,17 @@ export default function LoginPage() {
       </p>
       <h1 className="mt-2 text-center text-xl font-bold text-white">Sign in</h1>
 
+      {verified === "1" && (
+        <p className="mt-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-center text-xs text-emerald-400">
+          Email verified — you can sign in now.
+        </p>
+      )}
+      {verified === "0" && (
+        <p className="mt-4 rounded-lg border border-pink-500/30 bg-pink-500/10 px-3 py-2 text-center text-xs text-pink-400">
+          That verification link is invalid or has expired.
+        </p>
+      )}
+
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="mb-1 block text-xs text-gray-400">Email</label>
@@ -46,7 +60,12 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-400">Password</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="text-xs text-gray-400">Password</label>
+            <Link href="/forgot-password" className="text-xs text-purple-300 hover:text-purple-200">
+              Forgot password?
+            </Link>
+          </div>
           <input
             type="password"
             required
@@ -75,5 +94,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

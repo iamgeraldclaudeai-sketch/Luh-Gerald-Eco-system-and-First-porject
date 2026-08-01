@@ -10,6 +10,7 @@ import {
 
 interface AuthUser {
   email: string;
+  emailVerified: boolean;
 }
 
 interface AuthResult {

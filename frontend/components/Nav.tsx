@@ -47,6 +47,11 @@ export default function Nav() {
           </button>
         </div>
       </div>
+      {user && !user.emailVerified && (
+        <div className="border-t border-amber-500/20 bg-amber-500/10 px-6 py-1.5 text-center text-[11px] text-amber-300">
+          Check your inbox to verify {user.email} — some features may prompt for it later.
+        </div>
+      )}
     </header>
   );
 }

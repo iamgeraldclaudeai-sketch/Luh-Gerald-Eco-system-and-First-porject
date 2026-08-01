@@ -2,7 +2,13 @@ import Link from "next/link";
 import { ModuleDef } from "@/lib/modules";
 import { colorClasses } from "@/lib/colors";
 
-export default function ModuleScreen({ module }: { module: ModuleDef }) {
+export default function ModuleScreen({
+  module,
+  children,
+}: {
+  module: ModuleDef;
+  children?: React.ReactNode;
+}) {
   const c = colorClasses[module.color];
 
   return (
@@ -31,10 +37,14 @@ export default function ModuleScreen({ module }: { module: ModuleDef }) {
             </div>
           ))}
         </div>
-        <p className="mt-6 text-xs text-gray-600">
-          This screen is a placeholder. Real data and actions plug in here next.
-        </p>
+        {!children && (
+          <p className="mt-6 text-xs text-gray-600">
+            This screen is a placeholder. Real data and actions plug in here next.
+          </p>
+        )}
       </section>
+
+      {children}
     </div>
   );
 }

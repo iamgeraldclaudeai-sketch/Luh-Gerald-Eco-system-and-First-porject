@@ -24,3 +24,24 @@ All notable changes to the Luh Gerald Eco System are logged here.
   - Passwords hashed with bcrypt; sessions are signed httpOnly cookies
   - New `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/session` routes
   - Documented database + session secret setup in `DEPLOYMENT.md`
+- Tightened auth config errors: missing `POSTGRES_URL`/`DATABASE_URL`/`SESSION_SECRET` now
+  names exactly which one is missing instead of a generic failure message
+- Added email verification: signup sends a verification email, `/api/auth/verify` confirms it,
+  unverified accounts get a reminder banner but aren't blocked from signing in
+- Added password reset: `/forgot-password` and `/reset-password` pages, `/api/auth/request-password-reset`
+  and `/api/auth/reset-password` routes, token-based with 1 hour expiry
+- Added `lib/email.ts` sending real emails via Resend, falling back to console logging when unconfigured
+- Added `scripts/seed.mjs` (`npm run seed`) to populate sample users and sample Marketing Suite posts
+- Wired the Marketing Suite screen to real seeded post data (first module off placeholders)
+- Added vitest with unit tests for session token round-trip and token generation (`npm test`)
+- Added an AI agents system
+  - `agents` and `activity_log` tables; 2 sample agents seeded (Atlas, Nova)
+  - `GET /api/agents`, `GET /api/agents/[id]`, `POST /api/agents/[id]/act` (stubbed action
+    runner, logs each run to `activity_log`)
+  - AI Command Center now shows agent cards with a "Run action" modal; results append live
+    to the activity log feed
+- Wired the remaining 5 modules to real DB-backed data, same server-component pattern as
+  Marketing Suite: Content Studio, Dev Bay, Operations Hub, Finance Office, Research Lab
+  - Generic `module_items` table (with optional `amount_cents` for Finance Office) plus a
+    shared `lib/moduleItems.ts` helper and `components/ModuleItemsList.tsx` display component
+  - Sample rows seeded for every module via `npm run seed`
