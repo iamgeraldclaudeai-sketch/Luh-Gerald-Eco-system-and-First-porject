@@ -6,12 +6,12 @@ export default function ModuleScreen({ module }: { module: ModuleDef }) {
   const c = colorClasses[module.color];
 
   return (
-    <div className="space-y-8">
-      <Link href="/" className="text-xs text-gray-500 hover:text-gray-300">
+    <div className="starfield space-y-8 rounded-3xl border border-purple-500/10 p-2">
+      <Link href="/" className="inline-block text-xs text-gray-500 hover:text-gray-300">
         ← Back to Command Center
       </Link>
 
-      <section className={`rounded-2xl border ${c.border} ${c.bg} px-8 py-10`}>
+      <section className={`glow-border rounded-2xl border ${c.border} ${c.bg} px-8 py-10`}>
         <div className="text-3xl">{module.icon}</div>
         <h1 className={`mt-3 text-2xl font-bold ${c.text}`}>{module.name}</h1>
         <p className="mt-1 text-sm text-gray-400">{module.tagline}</p>
@@ -24,7 +24,7 @@ export default function ModuleScreen({ module }: { module: ModuleDef }) {
           {module.widgets.map((widget) => (
             <div
               key={widget}
-              className={`rounded-xl border ${c.border} bg-space-900 p-4 text-sm text-gray-300`}
+              className={`glow-border rounded-xl border ${c.border} bg-space-900 p-4 text-sm text-gray-300`}
             >
               <p className="text-xs text-gray-500">{widget}</p>
               <p className={`mt-2 text-lg font-semibold ${c.text}`}>—</p>

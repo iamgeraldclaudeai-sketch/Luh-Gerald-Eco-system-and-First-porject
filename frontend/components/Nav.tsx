@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { modules } from "@/lib/modules";
 import { colorClasses } from "@/lib/colors";
+import { useAuth } from "@/lib/auth";
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    router.push("/login");
+  }
 
   return (
     <header className="sticky top-0 z-10 border-b border-purple-500/20 bg-space-950/90 backdrop-blur">
@@ -29,6 +37,15 @@ export default function Nav() {
             );
           })}
         </nav>
+        <div className="ml-auto flex items-center gap-3 text-xs">
+          {user && <span className="text-gray-500">{user.email}</span>}
+          <button
+            onClick={handleLogout}
+            className="rounded-md border border-purple-500/30 px-3 py-1 text-gray-400 transition-colors hover:border-pink-400 hover:text-pink-300"
+          >
+            Log out
+          </button>
+        </div>
       </div>
     </header>
   );

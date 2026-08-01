@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Nav from "@/components/Nav";
+import { AuthProvider } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Luh Gerald Eco System",
@@ -15,8 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-space-950 font-display antialiased">
-        <Nav />
-        <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
