@@ -14,6 +14,17 @@ matters is **Root Directory**.
 
 Full setup steps for each are below.
 
+## Checking deployment health
+
+`GET /api/health` reports whether the database is reachable and
+`SESSION_SECRET` is set — `200` with `"status": "ok"` when both are fine,
+`503` with `"status": "degraded"` and a per-check error otherwise. No login
+required; point an uptime monitor at it, or just curl it after deploying:
+
+```bash
+curl https://<your-site>/api/health
+```
+
 ## First-time setup
 
 1. Go to https://vercel.com/new and import this GitHub repo.
