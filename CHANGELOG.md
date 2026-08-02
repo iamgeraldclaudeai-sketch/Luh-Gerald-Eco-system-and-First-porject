@@ -103,3 +103,7 @@ All notable changes to the Luh Gerald Eco System are logged here.
   these had no auth check at all beyond the client-side `RequireAuth` guard, so anyone with the
   URL could call them directly, including the two that mutate data. 4 new tests confirm requests
   without a valid session are rejected with 401.
+- Added `GET /api/health`: checks database connectivity (`SELECT 1`) and `SESSION_SECRET`
+  presence, returns structured JSON (`{ status, checks: { database, sessionSecret }, timestamp }`),
+  `200` when healthy or `503` when degraded. Intentionally public (no session guard) — health
+  checks need to work for uptime monitors that don't carry a session cookie. 3 new unit tests.
