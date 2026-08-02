@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
+import { requireSession } from "@/lib/requireSession";
 
 export async function GET(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireSession(req);
+  if (session instanceof NextResponse) return session;
+
   const { id } = await params;
   const agentId = Number(id);
   if (!Number.isInteger(agentId)) {
@@ -15,7 +19,8 @@ export async function GET(
     await ensureSchema();
     const client = sql();
     const rows = await client`
-      SELECT id, name, role, icon, status FROM agents WHERE id = ${agentId}
+      SELECT id, handle, name, role, persona, capabilities, icon, status
+      FROM agents WHERE id = ${agentId}
     `;
     if (rows.length === 0) {
       return NextResponse.json({ error: "Agent not found." }, { status: 404 });

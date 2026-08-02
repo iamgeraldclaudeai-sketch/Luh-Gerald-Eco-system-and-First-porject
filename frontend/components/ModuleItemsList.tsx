@@ -42,15 +42,18 @@ export default function ModuleItemsList({
           {items.map((item) => (
             <li
               key={item.id}
-              className={`glow-border flex items-center justify-between rounded-lg border ${c.border} bg-space-900 px-4 py-3 text-sm`}
+              className={`glass-panel glow-border rounded-lg border ${c.border} px-4 py-3 text-sm`}
             >
-              <span className="text-gray-200">{item.title}</span>
-              <span className="flex items-center gap-3">
-                {item.amount_cents !== null && (
-                  <span className="text-xs text-gray-400">{formatCurrency(item.amount_cents)}</span>
-                )}
-                <span className={`text-xs uppercase tracking-wide ${c.text}`}>{item.status}</span>
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-200">{item.title}</span>
+                <span className="flex items-center gap-3">
+                  {item.amount_cents !== null && (
+                    <span className="text-xs text-gray-400">{formatCurrency(item.amount_cents)}</span>
+                  )}
+                  <span className={`text-xs uppercase tracking-wide ${c.text}`}>{item.status}</span>
+                </span>
+              </div>
+              {item.body && <p className="mt-1 text-xs text-gray-500">{item.body}</p>}
             </li>
           ))}
         </ul>

@@ -4,8 +4,51 @@
 
 html,
 body {
-  background-color: #05030f;
+  background-color: #0b0f1a;
   color: #e9e4ff;
+}
+
+:focus-visible {
+  outline: 2px solid #00e6a8;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.glass-panel {
+  background-color: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-cta {
+  box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.6), 0 0 24px -4px rgba(124, 92, 255, 0.85);
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+}
+
+.glow-cta:hover {
+  box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.85), 0 0 32px -2px rgba(0, 230, 168, 0.65);
+  transform: translateY(-1px);
+}
+
+.glow-cta:active {
+  transform: translateY(0);
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: 0.5rem;
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
 }
 
 .glow-border {
@@ -77,11 +120,13 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .page-transition,
-  .pulse-dot {
+  .pulse-dot,
+  .skeleton {
     animation: none !important;
   }
 
-  .glow-border {
+  .glow-border,
+  .glow-cta {
     transition: none !important;
   }
 }

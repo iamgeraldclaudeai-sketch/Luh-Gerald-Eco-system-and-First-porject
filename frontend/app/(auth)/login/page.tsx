@@ -23,14 +23,14 @@ function LoginForm() {
     const result = await login(email, password);
     setSubmitting(false);
     if (result.ok) {
-      router.push("/");
+      router.push("/dashboard");
     } else {
       setError(result.error ?? "Something went wrong.");
     }
   }
 
   return (
-    <div className="rounded-2xl border border-purple-500/30 bg-space-900 p-8">
+    <div className="glass-panel glow-border rounded-2xl border border-primary/30 p-8">
       <p className="text-center text-xs tracking-[0.3em] text-purple-300">
         LUH GERALD ECO SYSTEM
       </p>
@@ -81,7 +81,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-lg bg-purple-600 py-2 text-sm font-semibold text-white transition-colors hover:bg-purple-500 disabled:opacity-50"
+          className="glow-cta w-full rounded-lg bg-primary py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
           {submitting ? "Signing in…" : "Sign in"}
         </button>

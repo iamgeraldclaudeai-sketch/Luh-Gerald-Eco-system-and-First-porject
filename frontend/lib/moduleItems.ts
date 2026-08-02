@@ -3,8 +3,10 @@ import { sql, ensureSchema } from "./db";
 export interface ModuleItem {
   id: number;
   title: string;
+  body: string | null;
   status: string;
   amount_cents: number | null;
+  metadata: Record<string, unknown>;
   created_at: string;
 }
 
@@ -13,7 +15,7 @@ export async function getModuleItems(moduleSlug: string): Promise<ModuleItem[] |
     await ensureSchema();
     const client = sql();
     const rows = await client`
-      SELECT id, title, status, amount_cents, created_at FROM module_items
+      SELECT id, title, body, status, amount_cents, metadata, created_at FROM module_items
       WHERE module = ${moduleSlug}
       ORDER BY created_at DESC
       LIMIT 10

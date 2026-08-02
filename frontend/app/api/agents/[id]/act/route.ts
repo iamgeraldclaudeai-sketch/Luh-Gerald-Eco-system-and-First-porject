@@ -1,26 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sql, ensureSchema } from "@/lib/db";
-
-// Stub action runner: maps known action names to canned responses. Real
-// execution logic (calling out to actual tools/services) plugs in here later.
-const STUB_RESPONSES: Record<string, string> = {
-  suggest_campaign:
-    'Suggested campaign: "48-Hour Flash Drop" — teaser content + limited-time discount code.',
-  run_diagnostics: "All systems nominal. No anomalies detected.",
-  summarize_trends: "Short-form video and community-driven drops are trending up this week.",
-};
-
-function stubResult(action: string): string {
-  return (
-    STUB_RESPONSES[action] ??
-    `Acknowledged action "${action}". Stub runner — real execution wiring comes later.`
-  );
-}
+import { runJob } from "@/lib/jobQueue";
+import { runAgentAction } from "@/lib/actionRunner";
+import { requireSession } from "@/lib/requireSession";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireSession(req);
+  if (session instanceof NextResponse) return session;
+
   const { id } = await params;
   const agentId = Number(id);
   if (!Number.isInteger(agentId)) {
@@ -38,7 +28,8 @@ export async function POST(
   if (!action) {
     return NextResponse.json({ error: 'Field "action" is required.' }, { status: 400 });
   }
-  if (body.input !== undefined && (typeof body.input !== "object" || body.input === null)) {
+  const input = body.input;
+  if (input !== undefined && (typeof input !== "object" || input === null)) {
     return NextResponse.json({ error: '"input" must be an object if provided.' }, { status: 400 });
   }
 
@@ -52,16 +43,28 @@ export async function POST(
     }
     const agent = agentRows[0] as { id: number; name: string };
 
-    const result = stubResult(action);
+    // Create the pending job entry before running anything, so it exists
+    // even if the action runner throws.
+    const inputJson = input !== undefined ? JSON.stringify(input) : null;
+    const pendingRows = await client`
+      INSERT INTO activity_log (agent_id, action, input, status, message)
+      VALUES (${agent.id}, ${action}, ${inputJson}::jsonb, 'pending', ${`${agent.name} is running "${action}"…`})
+      RETURNING id
+    `;
+    const jobId = pendingRows[0].id as number;
+
+    const job = await runJob(() => runAgentAction(action, input));
+    const result = job.status === "completed" ? job.result! : `Action failed: ${job.error}`;
     const message = `${agent.name} ran "${action}": ${result}`;
 
     const logRows = await client`
-      INSERT INTO activity_log (agent_id, message)
-      VALUES (${agent.id}, ${message})
+      UPDATE activity_log
+      SET status = ${job.status}, result = ${JSON.stringify({ text: result })}::jsonb, message = ${message}
+      WHERE id = ${jobId}
       RETURNING id, message, created_at
     `;
 
-    return NextResponse.json({ result, log: logRows[0] });
+    return NextResponse.json({ jobId, result, log: logRows[0] });
   } catch (err) {
     console.error("POST /api/agents/[id]/act error", err);
     return NextResponse.json(

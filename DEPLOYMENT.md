@@ -3,6 +3,17 @@
 The app lives in `frontend/`, not the repo root, so the one setting that
 matters is **Root Directory**.
 
+## Environment variables at a glance
+
+| Variable | Required? | Where it comes from |
+| --- | --- | --- |
+| `DATABASE_URL` (or `POSTGRES_URL`) | Yes | Attach a Postgres database in Vercel's **Storage** tab — see below |
+| `SESSION_SECRET` | Yes | Generate with `openssl rand -hex 32`, add it yourself |
+| `RESEND_API_KEY` | Optional | Free account at resend.com — without it, emails just log to the server console |
+| `RESEND_FROM_EMAIL` | Optional | Defaults to Resend's shared test sender |
+
+Full setup steps for each are below.
+
 ## First-time setup
 
 1. Go to https://vercel.com/new and import this GitHub repo.
@@ -87,6 +98,13 @@ sample login credentials when it finishes. It needs `DATABASE_URL` (or
 `POSTGRES_URL`) pointed at the database you want to seed — see "Local
 development" above for your own machine, or the next section to seed your
 **production** database without ever pasting the credential into a chat.
+
+## Continuous integration
+
+`.github/workflows/test.yml` runs `npm test` and `npm run build` on every
+push to `main` and on every pull request — no secrets required, since the
+unit tests don't touch a database. This is separate from the seed workflow
+below, which does need production credentials.
 
 ### Seeding production via GitHub Actions
 
