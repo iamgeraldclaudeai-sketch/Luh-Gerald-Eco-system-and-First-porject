@@ -103,3 +103,11 @@ All notable changes to the Luh Gerald Eco System are logged here.
   these had no auth check at all beyond the client-side `RequireAuth` guard, so anyone with the
   URL could call them directly, including the two that mutate data. 4 new tests confirm requests
   without a valid session are rejected with 401.
+- Agent actions (`POST /api/agents/[id]/act`) now call Claude for real (via Anthropic's API)
+  instead of returning a fixed canned string, when `ANTHROPIC_API_KEY` is set — falls back to
+  the existing canned responses otherwise, same pattern as the Resend email integration.
+  The prompt includes the agent's real `role`/`persona`, so responses are grounded in who the
+  agent is. Alongside it: basic rate limiting (5 actions per agent per 60s, backed by
+  `activity_log` itself — no new external service) and real audit logging
+  (`activity_log.user_id` is now set from the signed-in session instead of always NULL).
+  6 new/updated unit tests cover the real-call, fallback, and rate-limit paths.

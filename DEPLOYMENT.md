@@ -11,6 +11,8 @@ matters is **Root Directory**.
 | `SESSION_SECRET` | Yes | Generate with `openssl rand -hex 32`, add it yourself |
 | `RESEND_API_KEY` | Optional | Free account at resend.com — without it, emails just log to the server console |
 | `RESEND_FROM_EMAIL` | Optional | Defaults to Resend's shared test sender |
+| `ANTHROPIC_API_KEY` | Optional | console.anthropic.com — without it, agent actions return canned responses instead of real Claude-generated ones |
+| `ANTHROPIC_MODEL` | Optional | Defaults to `claude-haiku-4-5-20251001` |
 
 Full setup steps for each are below.
 
@@ -82,6 +84,27 @@ To send real emails:
    - `RESEND_FROM_EMAIL` (optional) — defaults to Resend's shared test
      sender; set this to your own verified domain/sender once you have one.
 3. Redeploy.
+
+## Real agent responses (instead of canned ones)
+
+Agent actions (`POST /api/agents/[id]/act`, the "Run action" modal, and the
+chat on each `/agents/[handle]` page) are answered by
+[Anthropic's API](https://console.anthropic.com) if `ANTHROPIC_API_KEY` is
+set. Without it, they return the same fixed canned responses as before —
+nothing breaks, it just isn't AI-generated.
+
+To enable real responses:
+
+1. Get an API key at console.anthropic.com.
+2. Add `ANTHROPIC_API_KEY` as an environment variable. Optionally set
+   `ANTHROPIC_MODEL` to override the default (`claude-haiku-4-5-20251001`).
+3. Redeploy.
+
+Each agent's `persona`/`role` (from the `agents` table) is included in the
+prompt, so responses are grounded in who the agent is. Agent actions are
+also rate-limited (5 per agent per 60 seconds, backed by `activity_log` —
+no extra service needed) and logged with the real signed-in user's ID
+(`activity_log.user_id`), not just the agent.
 
 ## Seeding sample data
 

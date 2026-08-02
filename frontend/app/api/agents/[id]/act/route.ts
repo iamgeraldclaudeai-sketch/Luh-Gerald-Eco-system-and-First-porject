@@ -3,6 +3,7 @@ import { sql, ensureSchema } from "@/lib/db";
 import { runJob } from "@/lib/jobQueue";
 import { runAgentAction } from "@/lib/actionRunner";
 import { requireSession } from "@/lib/requireSession";
+import { checkAgentActionRateLimit } from "@/lib/rateLimit";
 
 export async function POST(
   req: NextRequest,
@@ -37,23 +38,41 @@ export async function POST(
     await ensureSchema();
     const client = sql();
 
-    const agentRows = await client`SELECT id, name FROM agents WHERE id = ${agentId}`;
+    const agentRows = await client`
+      SELECT id, name, role, persona FROM agents WHERE id = ${agentId}
+    `;
     if (agentRows.length === 0) {
       return NextResponse.json({ error: "Agent not found." }, { status: 404 });
     }
-    const agent = agentRows[0] as { id: number; name: string };
+    const agent = agentRows[0] as { id: number; name: string; role: string; persona: string | null };
+
+    const rateLimit = await checkAgentActionRateLimit(client, agent.id);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error: `This agent has hit its rate limit. Try again in ${rateLimit.retryAfterSeconds}s.`,
+        },
+        { status: 429 }
+      );
+    }
+
+    // Audit logging: attribute this action to the signed-in user, not just
+    // the agent. Best-effort — if the user row can't be found for some
+    // reason, the action still runs, just without a user_id on the log.
+    const userRows = await client`SELECT id FROM users WHERE email = ${session.email}`;
+    const userId = userRows.length > 0 ? (userRows[0].id as number) : null;
 
     // Create the pending job entry before running anything, so it exists
     // even if the action runner throws.
     const inputJson = input !== undefined ? JSON.stringify(input) : null;
     const pendingRows = await client`
-      INSERT INTO activity_log (agent_id, action, input, status, message)
-      VALUES (${agent.id}, ${action}, ${inputJson}::jsonb, 'pending', ${`${agent.name} is running "${action}"…`})
+      INSERT INTO activity_log (agent_id, user_id, action, input, status, message)
+      VALUES (${agent.id}, ${userId}, ${action}, ${inputJson}::jsonb, 'pending', ${`${agent.name} is running "${action}"…`})
       RETURNING id
     `;
     const jobId = pendingRows[0].id as number;
 
-    const job = await runJob(() => runAgentAction(action, input));
+    const job = await runJob(() => runAgentAction(action, input, agent));
     const result = job.status === "completed" ? job.result! : `Action failed: ${job.error}`;
     const message = `${agent.name} ran "${action}": ${result}`;
 
